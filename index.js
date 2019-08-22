@@ -40,7 +40,7 @@ localIpV4Address().then(function(ipAddress) {
     app.get('/', (req, res) => {
         // response mostrado em tela
         res.send(`
-        <a href="streamer">Streamer</a><br>
+        <a href="http://localhost:3000/streamer">Streamer</a><br>
         <a href="client">Client</a>
     `);
     });
