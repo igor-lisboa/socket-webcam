@@ -7,26 +7,26 @@ const httpServer = http.createServer(app);
 var localIpV4Address = require("local-ipv4-address");
 
 localIpV4Address().then(function(ipAddress) {
-    console.log("Meu IP é: " + ipAddress);
+    console.log("IP do servidor : " + ipAddress);
 
 
     const PORT = process.env.PORT || 3000;
 
     const wsServer = new WebSocket.Server({ server: httpServer }, () => console.log(`WS server is listening at ws://${ipAddress}:${WS_PORT}`));
 
-    // array of connected websocket clients
+    // matriz de clientes websocket conectados
     let connectedClients = [];
 
     wsServer.on('connection', (ws, req) => {
-        console.log('Connected');
-        // add new connected client
+        console.log('OK');
+        // adiciona novo cliente conectado
         connectedClients.push(ws);
         // listen for messages from the streamer, the clients will not send anything so we don't need to filter
         ws.on('message', data => {
-            // envia o frame em base64 para cada cliente conectado
+            // escuta mensagens do streamer, os clientes não enviarão nada, então não precisamos filtrar
             connectedClients.forEach((ws, i) => {
                 if (ws.readyState === ws.OPEN) { // verifica se ainda esta conectado
-                    ws.send(data); // send
+                    ws.send(data); // envia
                 } else { // se nao esta conectado remove do array de ws conectados
                     connectedClients.splice(i, 1);
                 }
@@ -40,7 +40,6 @@ localIpV4Address().then(function(ipAddress) {
     app.get('/', (req, res) => {
         // response mostrado em tela
         res.send(`
-        <style src="geral.css"></style>
         <a href="streamer">Streamer</a><br>
         <a href="client">Client</a>
     `);

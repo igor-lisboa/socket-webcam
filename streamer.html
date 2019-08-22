@@ -2,13 +2,12 @@
 
 <head>
     <title>Streamer</title>
-    <style src="geral.css"></style>
 </head>
 
 <body>
     <video autoplay></video>
     <script>
-        // get video dom element
+        // obtem elemento video
         const video = document.querySelector('video');
         const mediaConfig = {
             video: {
@@ -16,30 +15,30 @@
                 height: 200
             }
         };
-        // request access to webcam
+        // pede acesso para acessar webcam
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia(mediaConfig).then((stream) => {
                 video.srcObject = stream;
                 video.play();
             });
-        } else if (navigator.getUserMedia) { // Standard
+        } else if (navigator.getUserMedia) { // Padrao
             navigator.getUserMedia(mediaConfig).then((stream) => {
                 video.srcObject = stream;
                 video.play();
             });
-        } else if (navigator.webkitGetUserMedia) { // WebKit-prefixed
+        } else if (navigator.webkitGetUserMedia) { // WebKit-prefixado
             navigator.webkitGetUserMedia(mediaConfig).then((stream) => {
                 video.srcObject = stream;
                 video.play();
             });
-        } else if (navigator.mozGetUserMedia) { // Mozilla-prefixed
+        } else if (navigator.mozGetUserMedia) { // Mozilla-prefixado
             navigator.mozGetUserMedia(mediaConfig).then((stream) => {
                 video.srcObject = stream;
                 video.play();
             });
         }
 
-        // returns a frame encoded in base64
+        // retorna um frame codificado em base64
         const getFrame = () => {
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;

@@ -1,14 +1,13 @@
 <html>
 
 <head>
-    <title>Client</title>
-    <style src="geral.css"></style>
+    <title>Cliente</title>
 </head>
 
 <body>
     <img src="">
     <script>
-        // get img dom element
+        // pega o elemento img
         const img = document.querySelector('img');
 
         const WS_URL = location.origin.replace(/^http/, 'ws');
@@ -17,7 +16,7 @@
         const FPS = 15;
         setInterval(() => {
             ws.onmessage = message => {
-                // set the base64 string to the src tag of the image
+                // define a string em base64 para a tag src da imagem
                 img.src = message.data;
             }
         }, 1000 / FPS);
