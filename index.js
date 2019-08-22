@@ -6,7 +6,7 @@ const app = express();
 const httpServer = http.createServer(app);
 var localIpV4Address = require("local-ipv4-address");
 
-localIpV4Address().then(function (ipAddress) {
+localIpV4Address().then(function(ipAddress) {
     console.log("Meu IP é: " + ipAddress);
 
 
@@ -40,6 +40,7 @@ localIpV4Address().then(function (ipAddress) {
     app.get('/', (req, res) => {
         // response mostrado em tela
         res.send(`
+        <style src="geral.css"></style>
         <a href="streamer">Streamer</a><br>
         <a href="client">Client</a>
     `);
