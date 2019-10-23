@@ -18,16 +18,20 @@ localIpV4Address().then(function(ipAddress) {
     let connectedClients = [];
 
     wsServer.on('connection', (ws, req) => {
-        console.log('OK');
+        console.log("Nova conexão");
         // adiciona novo cliente conectado
         connectedClients.push(ws);
         // listen for messages from the streamer, the clients will not send anything so we don't need to filter
         ws.on('message', data => {
             // escuta mensagens do streamer, os clientes não enviarão nada, então não precisamos filtrar
             connectedClients.forEach((ws, i) => {
-                if (ws.readyState === ws.OPEN) { // verifica se ainda esta conectado
-                    ws.send(data); // envia
-                } else { // se nao esta conectado remove do array de ws conectados
+                try {
+                    if (ws.readyState === ws.OPEN) { // verifica se ainda esta conectado
+                        ws.send(data); // envia
+                    } else { // se nao esta conectado remove do array de ws conectados
+                        connectedClients.splice(i, 1);
+                    }
+                } catch (notOpenEx) {
                     connectedClients.splice(i, 1);
                 }
             });

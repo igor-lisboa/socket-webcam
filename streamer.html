@@ -1,61 +1,107 @@
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
     <title>Streamer</title>
+    <meta name="viewport" content="width=device-width">
 </head>
 
 <body>
-    <video autoplay></video>
+    <main>
+        <video controls></video>
+    </main>
     <script>
-        // obtem elemento video
-        const video = document.querySelector('video');
-        const mediaConfig = {
+        let constraintObj = {
+            audio: true,
             video: {
-                width: 200,
-                height: 200
+                facingMode: "user",
+                width: {
+                    min: 640,
+                    ideal: 1280,
+                    max: 1920
+                },
+                height: {
+                    min: 480,
+                    ideal: 720,
+                    max: 1080
+                }
             }
         };
-        // pede acesso para acessar webcam
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia(mediaConfig).then((stream) => {
-                video.srcObject = stream;
-                video.play();
-            });
-        } else if (navigator.getUserMedia) { // Padrao
-            navigator.getUserMedia(mediaConfig).then((stream) => {
-                video.srcObject = stream;
-                video.play();
-            });
-        } else if (navigator.webkitGetUserMedia) { // WebKit-prefixado
-            navigator.webkitGetUserMedia(mediaConfig).then((stream) => {
-                video.srcObject = stream;
-                video.play();
-            });
-        } else if (navigator.mozGetUserMedia) { // Mozilla-prefixado
-            navigator.mozGetUserMedia(mediaConfig).then((stream) => {
-                video.srcObject = stream;
-                video.play();
-            });
+        //handle older browsers that might implement getUserMedia in some way
+        if (navigator.mediaDevices === undefined) {
+            navigator.mediaDevices = {};
+            navigator.mediaDevices.getUserMedia = function(constraintObj) {
+                let getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                if (!getUserMedia) {
+                    return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+                }
+                return new Promise(function(resolve, reject) {
+                    getUserMedia.call(navigator, constraintObj, resolve, reject);
+                });
+            }
+        } else {
+            navigator.mediaDevices.enumerateDevices()
+                .then(devices => {
+                    devices.forEach(device => {
+                        console.log(device.kind.toUpperCase(), device.label);
+                        //, device.deviceId
+                    })
+                })
+                .catch(err => {
+                    console.log(err.name, err.message);
+                })
         }
+        navigator.mediaDevices.getUserMedia(constraintObj)
+            .then(function(mediaStreamObj) {
+                //connect the media stream to the first video element
+                let video = document.querySelector('video');
+                if ("srcObject" in video) {
+                    console.log(mediaStreamObj);
+                    console.log(window.URL.createObjectURL(mediaStreamObj));
+                    video.srcObject = mediaStreamObj;
+                    video.play();
+                } else {
+                    //old version
+                    console.log(window.URL.createObjectURL(mediaStreamObj));
+                    video.src = window.URL.createObjectURL(mediaStreamObj);
+                    video.play();
+                }
 
-        // retorna um frame codificado em base64
-        const getFrame = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            const data = canvas.toDataURL('image/jpeg');
-            return data;
-        }
-        const WS_URL = location.origin.replace(/^http/, 'ws');
-        const FPS = 15;
-        const ws = new WebSocket(WS_URL);
-        ws.onopen = () => {
-            console.log(`Connected to ${WS_URL}`);
-            setInterval(() => {
-                ws.send(getFrame());
-            }, 1000 / FPS);
-        }
+                video.addEventListener('canplay', () => {
+                    let stream;
+                    const fps = 10;
+                    if (video.captureStream) {
+                        stream = video.captureStream(fps);
+                    } else if (video.mozCaptureStream) {
+                        stream = video.mozCaptureStream(fps);
+                    } else {
+                        console.error('Stream capture is not supported');
+                        stream = null;
+                    }
+                    const WS_URL = location.origin.replace(/^http/, 'ws');
+                    const ws = new WebSocket(WS_URL);
+                    ws.onopen = () => {
+                        console.log(`Conectado com ${WS_URL}`);
+                        console.log(stream);
+                        ws.send(JSON.stringify(stream));
+                    }
+                });
+            })
+            .catch(function(err) {
+                console.log(err.name, err.message);
+            });
+
+        /*********************************
+        getUserMedia returns a Promise
+        resolve - returns a MediaStream Object
+        reject returns one of the following errors
+        AbortError - generic unknown cause
+        NotAllowedError (SecurityError) - user rejected permissions
+        NotFoundError - missing media track
+        NotReadableError - user permissions given but hardware/OS error
+        OverconstrainedError - constraint video settings preventing
+        TypeError - audio: false, video: false
+        *********************************/
     </script>
 </body>
 

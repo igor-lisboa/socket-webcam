@@ -5,21 +5,20 @@
 </head>
 
 <body>
-    <img src="">
+    <video autoplay></video>
     <script>
         // pega o elemento img
-        const img = document.querySelector('img');
+        const video = document.querySelector('video');
 
         const WS_URL = location.origin.replace(/^http/, 'ws');
         const ws = new WebSocket(WS_URL);
-        ws.onopen = () => console.log(`Connected to ${WS_URL}`);
-        const FPS = 15;
-        setInterval(() => {
-            ws.onmessage = message => {
-                // define a string em base64 para a tag src da imagem
-                img.src = message.data;
-            }
-        }, 1000 / FPS);
+        ws.onopen = () => console.log(`Conectado com ${WS_URL}`);
+        ws.onmessage = message => {
+            console.log(message.data);
+            var sourceObject = JSON.parse(message.data);
+            video.srcObject = sourceObject;
+        };
+        ws.onclose = () => console.log(`Socket fechado: ${WS_URL}`);
     </script>
 </body>
 
