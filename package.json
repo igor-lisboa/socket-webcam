@@ -1,27 +1,27 @@
 {
-  "name": "socket-webcam",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lucianoicraft/socket-webcam.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/lucianoicraft/socket-webcam/issues"
-  },
-  "homepage": "https://github.com/lucianoicraft/socket-webcam#readme",
-  "dependencies": {
-    "express": "^4.17.1",
-    "local-ipv4-address": "0.0.2",
-    "wrtc": "^0.4.2",
-    "ws": "^7.1.2"
-  }
+    "name": "socket-webcam",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "node src/js/server.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lucianoicraft/socket-webcam.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/lucianoicraft/socket-webcam/issues"
+    },
+    "homepage": "https://github.com/lucianoicraft/socket-webcam#readme",
+    "dependencies": {
+        "express": "^4.17.1",
+        "local-ipv4-address": "0.0.2",
+        "wrtc": "^0.4.2",
+        "ws": "^7.1.2"
+    }
 }
