@@ -1,0 +1,205 @@
+<html>
+<!-- 
+    https://stackoverflow.com/questions/34102011/streaming-getusermedia-to-server
+    Para que isso funcione corretamente, você precisa do servidor para "falar" o WebRTC também. Usar websockets não fornecerá o resultado desejado e não responderá como WebRTC - não será em tempo real.
+    Para executar o WebRTC em um servidor, você pode usar a pilha do WebRTC em webrtc.org ou OpenWebRTC como ponto de partida, usar o GStreamer ou procurar algo um pouco mais completo. Bons projetos de estruturas de servidor de mídia para o WebRTC a partir de Kurento, Jitsi e Janus.
+    https://github.com/webrtc
+-->
+
+<head>
+    <meta charset="UTF-8">
+    <title>Streamer</title>
+    <meta name="viewport" content="width=device-width">
+</head>
+
+<body>
+    <main>
+        <input type="checkbox" id="audio">
+        <label for="audio">Incluir audio?</label>
+
+        <button id="start">Iniciar Captura</button>
+        <button id="send" disabled>Transmitir</button>
+
+        <h1>Video Recuperado da WebCam</h1>
+        <video playsinline autoplay muted></video>
+
+        <h1>Video Recuperado do Stream</h1>
+        <video playsinline autoplay id="remote"></video>
+
+    </main>
+
+    <script>
+        const video = document.querySelector('video');
+        const video2 = document.querySelector('video#remote');
+
+
+        const audioCheckbox = document.querySelector('input#audio');
+
+        const startButton = document.querySelector('button#start');
+        const sendButton = document.querySelector('button#send');
+
+        startButton.onclick = start;
+        sendButton.onclick = send;
+
+        const pipes = [];
+
+        let localStream;
+        let remoteStream;
+
+        function gotStream(stream) {
+            console.log('Stream local recebida');
+            video.srcObject = stream;
+            localStream = stream;
+            sendButton.disabled = false;
+        }
+
+        function start() {
+            console.log('Solicitando stream local');
+            startButton.disabled = true;
+            const options = audioCheckbox.checked ? {
+                audio: true,
+                video: true
+            } : {
+                audio: false,
+                video: true
+            };
+            audioCheckbox.disabled = true;
+            navigator.mediaDevices
+                .getUserMedia(options)
+                .then(gotStream)
+                .catch(function(e) {
+                    alert('getUserMedia() falhou');
+                    console.log('getUserMedia() erro: ', e);
+                });
+        }
+
+        function gotremoteStream(stream) {
+            remoteStream = stream;
+            video2.srcObject = stream;
+            console.log('Stream remota recebida');
+            console.log(stream);
+        }
+
+        function send() {
+            sendButton.disabled = true;
+            console.log('Inicia Stream');
+            pipes.push(new VideoPipe(localStream, gotremoteStream));
+        }
+
+        //recuperacao de devices
+        if (navigator.mediaDevices === undefined) {
+            navigator.mediaDevices = {};
+            navigator.mediaDevices.getUserMedia = function(constraintObj) {
+                let getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                if (!getUserMedia) {
+                    return Promise.reject(new Error('getUserMedia nao esta implementado nesse navegador'));
+                }
+                return new Promise(function(resolve, reject) {
+                    getUserMedia.call(navigator, constraintObj, resolve, reject);
+                });
+            }
+        } else {
+            navigator.mediaDevices.enumerateDevices()
+                .then(devices => {
+                    // lista devices recuperados
+                    devices.forEach(device => {
+                        console.log(device.kind.toUpperCase(), device.label);
+                    })
+                })
+                .catch(err => {
+                    console.log(err.name, err.message);
+                })
+        }
+    </script>
+    <script>
+        /*
+         *  Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
+         *
+         *  Use of this source code is governed by a BSD-style license
+         *  that can be found in the LICENSE file in the root of the source
+         *  tree.
+         */
+        //
+        // A "videopipe" abstraction on top of WebRTC.
+        //
+        // The usage of this abstraction:
+        // var pipe = new VideoPipe(mediastream, handlerFunction);
+        // handlerFunction = function(mediastream) {
+        //   do_something
+        // }
+        // pipe.close();
+        //
+        // The VideoPipe will set up 2 PeerConnections, connect them to each
+        // other, and call HandlerFunction when the stream is available in the
+        // second PeerConnection.
+        //
+
+        function errorHandler(context) {
+            return function(error) {
+                trace('Failure in ' + context + ': ' + error.toString);
+            };
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function successHandler(context) {
+            return function() {
+                trace('Success in ' + context);
+            };
+        }
+
+        function noAction() {
+            console.log("SEM ACAO");
+        }
+
+
+        function VideoPipe(stream, handler) {
+            let location = window.location.origin;
+            console.log("location:" + location);
+            let servers = {
+                location
+            };
+            servers = null;
+            let pc1 = new RTCPeerConnection(servers);
+            let pc2 = new RTCPeerConnection(servers);
+
+            pc1.addStream(stream);
+            pc1.onicecandidate = function(event) {
+                if (event.candidate) {
+                    pc2.addIceCandidate(new RTCIceCandidate(event.candidate),
+                        noAction, errorHandler('AddIceCandidate'));
+                }
+            };
+            pc2.onicecandidate = function(event) {
+                if (event.candidate) {
+                    pc1.addIceCandidate(new RTCIceCandidate(event.candidate),
+                        noAction, errorHandler('AddIceCandidate'));
+                }
+            };
+            pc2.onaddstream = function(e) {
+                console.log("pc2.onaddstream");
+                handler(e.stream);
+            };
+            pc1.createOffer(function(desc) {
+                pc1.setLocalDescription(desc);
+                pc2.setRemoteDescription(desc);
+                pc2.createAnswer(function(desc2) {
+                    pc2.setLocalDescription(desc2);
+                    pc1.setRemoteDescription(desc2);
+                }, errorHandler('pc2.createAnswer'));
+            }, errorHandler('pc1.createOffer'));
+            this.pc1 = pc1;
+            this.pc2 = pc2;
+            console.log("pc1");
+            console.log(pc1);
+            console.log("pc2");
+            console.log(pc2);
+        }
+
+        VideoPipe.prototype.close = function() {
+            this.pc1.close();
+            this.pc2.close();
+        };
+    </script>
+</body>
+
+</html>

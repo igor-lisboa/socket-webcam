@@ -21,6 +21,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "local-ipv4-address": "0.0.2",
+    "wrtc": "^0.4.2",
     "ws": "^7.1.2"
   }
 }
