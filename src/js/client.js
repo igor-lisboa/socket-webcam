@@ -72,10 +72,56 @@ const handleLogin = async success => {
 
         let localStream
         try {
-            localStream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
-            })
+            //recuperacao de devices
+            if (navigator.mediaDevices === undefined) {
+                navigator.mediaDevices = {};
+                navigator.mediaDevices.getUserMedia = function(constraintObj) {
+                    let getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                    if (!getUserMedia) {
+                        return Promise.reject(new Error('getUserMedia nao esta implementado nesse navegador'));
+                    }
+                    return new Promise(function(resolve, reject) {
+                        getUserMedia.call(navigator, constraintObj, resolve, reject);
+                    });
+                }
+            } else {
+                navigator.mediaDevices.enumerateDevices().then(devices => {
+                        // lista devices recuperados
+                        devices.forEach(device => {
+                            console.log(device.kind.toUpperCase(), device.label);
+                        })
+                    })
+                    .catch(err => {
+                        console.log(err.name, err.message);
+                    })
+            }
+            const options = {
+                audio: true,
+                video: true
+            };
+            // pede acesso para acessar webcam
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                localStream = await navigator.mediaDevices.getUserMedia(options).catch(function(e) {
+                    alert('navigator.mediaDevices.getUserMedia() falhou');
+                    console.log('navigator.mediaDevices.getUserMedia() erro: ', e);
+                });
+            } else if (navigator.getUserMedia) { // Padrao
+                localStream = await navigator.getUserMedia(options).catch(function(e) {
+                    alert('navigator.getUserMedia() falhou');
+                    console.log('navigator.getUserMedia() erro: ', e);
+                });
+            } else if (navigator.webkitGetUserMedia) { // WebKit-prefixado
+                localStream = await navigator.webkitGetUserMedia(mediaConfig).catch(function(e) {
+                    alert('navigator.webkitGetUserMedia() falhou');
+                    console.log('navigator.webkitGetUserMedia() erro: ', e);
+                });
+            } else if (navigator.mozGetUserMedia) { // Mozilla-prefixado
+                localStream = await navigator.mozGetUserMedia(mediaConfig).catch(function(e) {
+                    alert('navigator.mozGetUserMedia() falhou');
+                    console.log('navigator.mozGetUserMedia() erro: ', e);
+                });
+            }
+
         } catch (error) {
             alert(`${error.name}`)
             console.error(error)

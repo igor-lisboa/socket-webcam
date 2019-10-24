@@ -113,6 +113,5 @@ localIpV4Address().then(function(ipAddress) {
     // HTTP rotas
     app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, '../../index.html')));
     app.get('/client.js', (req, res) => res.sendFile(path.resolve(__dirname, './client.js')));
-    app.get('/style.css', (req, res) => res.sendFile(path.resolve(__dirname, '../css/style.css')));
     httpServer.listen(PORT, () => console.log(`HTTP server listening at http://${ipAddress}:${PORT}`));
 });
