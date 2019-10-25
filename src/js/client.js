@@ -28,7 +28,7 @@ ws.onmessage = msg => {
             handleCandidate(data.candidate)
             break
         case 'close':
-            handleClose()
+            console.log("solicitacao de close na conexão")
             break
         default:
             break
@@ -47,87 +47,30 @@ const sendMessage = message => {
     ws.send(JSON.stringify(message))
 }
 
-document.querySelector('div#call').style.display = 'none'
 
 document.querySelector('button#login').addEventListener('click', event => {
-    username = document.querySelector('input#username').value
+    username = document.querySelector('input#id').value
 
-    if (username.length < 0) {
-        alert('Please enter a username 🙂')
+    if (username.length > 0) {
+        sendMessage({
+            type: 'login',
+            username: username
+        })
+    } else {
+        alert('Digite um ID')
         return
     }
 
-    sendMessage({
-        type: 'login',
-        username: username
-    })
+
 })
 
 const handleLogin = async success => {
     if (success === false) {
-        alert('nome de usuário já utilizado')
+        alert('ID já utilizado')
     } else {
-        document.querySelector('div#login').style.display = 'none'
-        document.querySelector('div#call').style.display = 'block'
-
-        let localStream
-        try {
-            //recuperacao de devices
-            if (navigator.mediaDevices === undefined) {
-                navigator.mediaDevices = {};
-                navigator.mediaDevices.getUserMedia = function(constraintObj) {
-                    let getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-                    if (!getUserMedia) {
-                        return Promise.reject(new Error('getUserMedia nao esta implementado nesse navegador'));
-                    }
-                    return new Promise(function(resolve, reject) {
-                        getUserMedia.call(navigator, constraintObj, resolve, reject);
-                    });
-                }
-            } else {
-                navigator.mediaDevices.enumerateDevices().then(devices => {
-                        // lista devices recuperados
-                        devices.forEach(device => {
-                            console.log(device.kind.toUpperCase(), device.label);
-                        })
-                    })
-                    .catch(err => {
-                        console.log(err.name, err.message);
-                    })
-            }
-            const options = {
-                audio: true,
-                video: true
-            };
-            // pede acesso para acessar webcam
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                localStream = await navigator.mediaDevices.getUserMedia(options).catch(function(e) {
-                    alert('navigator.mediaDevices.getUserMedia() falhou');
-                    console.log('navigator.mediaDevices.getUserMedia() erro: ', e);
-                });
-            } else if (navigator.getUserMedia) { // Padrao
-                localStream = await navigator.getUserMedia(options).catch(function(e) {
-                    alert('navigator.getUserMedia() falhou');
-                    console.log('navigator.getUserMedia() erro: ', e);
-                });
-            } else if (navigator.webkitGetUserMedia) { // WebKit-prefixado
-                localStream = await navigator.webkitGetUserMedia(mediaConfig).catch(function(e) {
-                    alert('navigator.webkitGetUserMedia() falhou');
-                    console.log('navigator.webkitGetUserMedia() erro: ', e);
-                });
-            } else if (navigator.mozGetUserMedia) { // Mozilla-prefixado
-                localStream = await navigator.mozGetUserMedia(mediaConfig).catch(function(e) {
-                    alert('navigator.mozGetUserMedia() falhou');
-                    console.log('navigator.mozGetUserMedia() erro: ', e);
-                });
-            }
-
-        } catch (error) {
-            alert(`${error.name}`)
-            console.error(error)
-        }
-
-        document.querySelector('video#local').srcObject = localStream
+        document.querySelector('button#login').disabled = true
+        document.querySelector('input#id').disabled = true
+        document.querySelector('video').removeAttribute("hidden");
 
         const configuration = {
             iceServers: [{ url: 'stun:stun2.1.google.com:19302' }]
@@ -135,10 +78,13 @@ const handleLogin = async success => {
 
         connection = new RTCPeerConnection(configuration)
 
-        connection.addStream(localStream)
+        //declara media Stream vazio
+        let localStream = new MediaStream();
+
+        addStream(localStream)
 
         connection.onaddstream = event => {
-            document.querySelector('video#remote').srcObject = event.stream
+            document.querySelector('video').srcObject = event.stream
         }
 
         connection.onicecandidate = event => {
@@ -151,32 +97,6 @@ const handleLogin = async success => {
         }
     }
 }
-
-document.querySelector('button#call').addEventListener('click', () => {
-    const callToUsername = document.querySelector('input#username-to-call').value
-
-    if (callToUsername.length === 0) {
-        alert('Digite um nome de usuário')
-        return
-    }
-
-    otherUsername = callToUsername
-
-    connection.createOffer(
-        offer => {
-            sendMessage({
-                type: 'offer',
-                offer: offer
-            })
-
-            connection.setLocalDescription(offer)
-        },
-        error => {
-            alert('Erro ao criar uma oferta')
-            console.error(error)
-        }
-    )
-})
 
 const handleOffer = (offer, username) => {
     otherUsername = username
@@ -204,17 +124,35 @@ const handleCandidate = candidate => {
     connection.addIceCandidate(new RTCIceCandidate(candidate))
 }
 
-document.querySelector('button#close-call').addEventListener('click', () => {
-    sendMessage({
-        type: 'close'
-    })
-    handleClose()
-})
 
-const handleClose = () => {
-    otherUsername = null
-    document.querySelector('video#remote').src = null
-    connection.close()
-    connection.onicecandidate = null
-    connection.onaddstream = null
+function listaRemoteStreams() {
+    if (connection != null) {
+        var streams = connection.getRemoteStreams();
+        for (var stream of streams) {
+            console.log("Remote stream: " + stream.id);
+        }
+    }
+}
+
+function listaLocalStreams() {
+    if (connection != null) {
+        var streams = connection.getLocalStreams();
+        for (var stream of streams) {
+            console.log("Local stream: " + stream.id);
+            console.log(stream);
+        }
+    }
+}
+
+function addStream(stream) {
+    if (connection != null) {
+        console.log(stream);
+        console.log(connection);
+        connection.addStream(stream);
+        console.log(connection);
+        console.log("Stream adicionada na conexão");
+        listaLocalStreams();
+    } else {
+        alert("Houve um problema na conexão, tente novamente!");
+    }
 }

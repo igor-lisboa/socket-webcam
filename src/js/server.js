@@ -7,7 +7,7 @@ var localIpV4Address = require("local-ipv4-address");
 
 //https://flaviocopes.com/webrtc/
 const WebSocket = require('ws')
-const wss = new WebSocket.Server({ server: httpServer }, () => console.log(`WS server is listening at ws://${ipAddress}:${WS_PORT}`));
+const wss = new WebSocket.Server({ server: httpServer });
 const users = {}
 
 const sendTo = (ws, message) => {
@@ -32,6 +32,7 @@ localIpV4Address().then(function(ipAddress) {
                 console.error('Invalid JSON', error)
                 data = {}
             }
+
 
             switch (data.type) {
                 case 'login':
@@ -112,6 +113,9 @@ localIpV4Address().then(function(ipAddress) {
 
     // HTTP rotas
     app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, '../../index.html')));
+    app.get('/streamer', (req, res) => res.sendFile(path.resolve(__dirname, '../html/streamer.html')));
+    app.get('/cliente', (req, res) => res.sendFile(path.resolve(__dirname, '../html/cliente.html')));
     app.get('/client.js', (req, res) => res.sendFile(path.resolve(__dirname, './client.js')));
+    app.get('/streamer.js', (req, res) => res.sendFile(path.resolve(__dirname, './streamer.js')));
     httpServer.listen(PORT, () => console.log(`HTTP server listening at http://${ipAddress}:${PORT}`));
 });
