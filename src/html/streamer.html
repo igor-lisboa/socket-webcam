@@ -7,16 +7,94 @@
 </head>
 
 <body>
-    <h1>Streamer</h1>
-    <input id="id" placeholder="SEU ID" required autofocus>
-    <button id="login">Login</button>
-    <hr>
-    <video autoplay muted hidden></video>
-    <hr>
-    <input id="envia-para" placeholder="ID DE DESTINO" disabled/>
-    <button id="envia" disabled>Envia Stream</button>
+    <div class="container">
+        <div class="left">
+            <h1>Streamer</h1>
+            <div class="align">
+                <input id="id" placeholder="SEU ID" required autofocus>
+                <button id="login">Login</button>
+            </div>
+            <div class="align">
+                <input id="envia-para" placeholder="ID DE DESTINO" disabled/>
+                <button id="envia" disabled>Enviar Stream</button>
+            </div>
+        </div>
+        <div class="right">
+            <video autoplay muted style="border: 1px solid #fff; width: 640px; height: 480px;"></video>
+        </div>
     </div>
 </body>
 <script src="streamer.js"></script>
 
 </html>
+
+<style>
+    * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        box-sizing: border-box;
+        margin: 0;
+    }
+    
+    body {
+        background-color: #333;
+        box-shadow: inset 0 0 5rem rgba(0, 0, 0, .5);
+    }
+    
+    .container {
+        display: flex;
+        min-height: -webkit-fill-available;
+    }
+    
+    .left {
+        width: 40%;
+        border-right: 1px solid #fff;
+        text-align-last: center;
+    }
+    
+    .align {
+        display: flex;
+        margin-left: 35%;
+        margin-bottom: 75px;
+    }
+    
+    .left input {
+        border: .05rem solid #fff;
+        border-radius: .2rem;
+        height: 24px;
+        margin-right: 5px;
+    }
+    
+    .left button {
+        cursor: pointer;
+        text-decoration: none;
+        color: #333;
+        background-color: #fff;
+        border: .05rem solid #fff;
+        border-radius: .2rem;
+        font-weight: 700;
+        font-size: .92rem;
+        margin-left: 5px;
+    }
+    
+    .left button:hover {
+        opacity: 0.9;
+    }
+    
+    .right {
+        width: 60%;
+        border-left: 1px solid #fff;
+        text-align-last: center;
+    }
+    
+    .right video {
+        margin-top: 200px;
+    }
+    
+    h1 {
+        margin-top: 100px;
+        margin-bottom: 35px;
+        color: white;
+        font-weight: 500;
+        font-size: 40px;
+    }
+</style>
